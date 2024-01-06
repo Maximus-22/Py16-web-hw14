@@ -8,7 +8,7 @@ from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 from pathlib import Path
 
-
+from src.conf import messages
 from src.database.db import get_db
 from src.repository import users as rep_users
 from src.schemas.user import UserSchema, TokenSchema, UserResponseSchema, RequestEmail
@@ -49,7 +49,7 @@ async def signup(body: UserSchema, bg_task: BackgroundTasks, request: Request, d
     """
     exist_user = await rep_users.get_user_by_email(body.email, db)
     if exist_user:
-        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Account already exists")
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=messages.ACCOUNT_EXIST)
     body.password = auth_service.get_password_hash(body.password)
     new_user = await rep_users.create_user(body, db)
     # TODO send email notification
@@ -75,11 +75,11 @@ async def login(body: OAuth2PasswordRequestForm = Depends(), db: AsyncSession = 
     # <body.username> буде <email>, оскiльки ми сами його вставляємо у <x-www-form-urlencoded> у поле <username>
     user = await rep_users.get_user_by_email(body.username, db)
     if user is None:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Wrong credentials")
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=messages.WRONG_CREDENTIALS)
     if not user.confirmed:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Email not confirmed")
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=messages.EMAIL_NOT_CONFIRMED)
     if not auth_service.verify_password(body.password, user.password):
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Wrong credentials")
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=messages.WRONG_CREDENTIALS)
     # Generate JWT
     access_token = await auth_service.create_access_token(data={"sub": user.email, "DB-class": "PSQL"})
     refresh_token = await auth_service.create_refresh_token(data={"sub": user.email})

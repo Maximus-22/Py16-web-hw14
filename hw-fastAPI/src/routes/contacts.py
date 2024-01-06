@@ -8,6 +8,7 @@ from src.entity.models import User, Role
 from src.schemas.contact import ContactSchema, ContactUpdateSchema, ContactResponseSchema
 from src.services.auth import auth_service
 from src.services.roles import RoleAccess
+from src.conf import messages
 
 router = APIRouter(prefix='/contacts', tags=['contacts'])
 
@@ -36,7 +37,6 @@ async def get_contacts(limit: int = Query(10, ge=10, le=500), offset: int = Quer
     """
     contact = await rep_contacts.get_contacts(limit, offset, db, user)
     return contact
-
 
 
 @router.get("/all", response_model=list[ContactResponseSchema], dependencies=[Depends(access_elevated)])
@@ -78,7 +78,7 @@ async def get_contact(contact_id: int = Path(ge=1), db: AsyncSession = Depends(g
     """
     contact = await rep_contacts.get_contact(contact_id, db, user)
     if contact is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="ENTITY NOT FOUND.")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=messages.ENTITY_NOT_FOUND)
     return contact
 
 

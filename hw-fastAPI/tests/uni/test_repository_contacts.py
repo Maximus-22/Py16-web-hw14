@@ -22,7 +22,7 @@ class TestAsyncContacts(unittest.IsolatedAsyncioTestCase):
         self.session = AsyncMock(spec=AsyncSession)
         self.user = User(id=1, username='test_user', email="user@gmail.com", password="123qwerty", confirmed=True)
         self.contact = ContactSchema(first_name="John", last_name="Doe", email="john.doe@example.com",
-                                     phone_number="1234567890", birth_date="1990.01.01", crm_status="operational")
+                                     phone_number="1234567890", birth_date="1990-01-01", crm_status="operational")
 
     async def test_get_contacts(self):
         contacts = [Contact(id = 1, first_name = "John", last_name = "Biden", email = "john.biden@whitehouse.gov",
@@ -78,8 +78,9 @@ class TestAsyncContacts(unittest.IsolatedAsyncioTestCase):
 
 
     async def test_create_contact(self):
-        new_contact = ContactSchema(id = 1, first_name="John", last_name="Doe", email="john.doe@example.com",
-                                    phone_number="1234567890", birth_date="1990.01.01", crm_status="operational")
+        new_data = ContactSchema(id = 1, first_name="John", last_name="Doe", email="john.doe@example.com",
+                                    phone_number="1234567890", birth_date="1990-01-01", crm_status="operational")
+        new_contact = Contact(**new_data.model_dump(exclude_unset=True), user=self.user)
         result = await create_contact(body=self.contact, db=self.session, user=self.user)
         self.assertIsInstance(result, Contact)
         self.assertEqual(result.first_name, new_contact.first_name)
@@ -93,11 +94,11 @@ class TestAsyncContacts(unittest.IsolatedAsyncioTestCase):
         # Створюємо імітацію контакту та БД
         contact_id = 1
         mocked_contact = ContactSchema(id=contact_id, first_name="John", last_name="Doe", email="john.doe@example.com",
-                                 phone_number="1234567890", birth_date="1990.01.01", crm_status="operational")
+                                 phone_number="1234567890", birth_date="1990-01-01", crm_status="operational")
         mocked_contacts = MagicMock()
         mocked_contacts.scalar_one_or_none.return_value = Contact(id=contact_id, first_name="John", last_name="Doe",
                                                                   email="john.doe@example.com", phone_number="1234567890",
-                                                                  birth_date="1990.01.01", crm_status="operational")
+                                                                  birth_date="1990-01-01", crm_status="operational")
         self.session.execute.return_value = mocked_contacts
         # Викликаємо функцію оновлення контакту
         result = await update_contact(contact_id=contact_id, body=self.contact, db=self.session, user=self.user)

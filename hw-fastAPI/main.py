@@ -14,6 +14,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from src.database.db import get_db
 from src.routes import auth, birthday_contacts, contacts, search_contacts, users
 from src.conf.config import config
+from src.services.middleware import BlackListMiddleware
 
 # Запуск проекту:
 # uvicorn main:app --host localhost --port 8000 --reload
@@ -26,38 +27,42 @@ app = FastAPI()
 # origins = ["http://localhost:3128", "http://localhost:8080"]
 origins = ["*"]
 
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=origins,
-    allow_credentials=True,
-    #allow_methods=["GET", "POST", "PUT", "DELETE"],
-    #allow_headers=["Authorization"],
-    allow_methods=["*"],
-    allow_headers=["*"],)
+
+app.add_middleware(BlackListMiddleware)
+
+
+# app.add_middleware(
+#     CORSMiddleware,
+#     allow_origins=origins,
+#     allow_credentials=True,
+#     #allow_methods=["GET", "POST", "PUT", "DELETE"],
+#     #allow_headers=["Authorization"],
+#     allow_methods=["*"],
+#     allow_headers=["*"],)
 
 
 
-# Black list
-banned_ips = [
-    ip_network("10.0.0.0/8"),
-    ip_network("172.16.0.0/12"),
-    ip_network("192.168.0.0/16"),]
-    # ip_network("127.0.0.1")]
+# # Black list
+# banned_ips = [
+#     ip_network("10.0.0.0/8"),
+#     ip_network("172.16.0.0/12"),
+#     ip_network("192.168.0.0/16"),]
+#     # ip_network("127.0.0.1")]
 
-@app.middleware("http")
-async def black_list(request: Request, call_next: Callable):
-    client_ip = ip_address(request.client.host)
-    # if client_ip in banned_ips:
-    #     return JSONResponse(status_code=status.HTTP_403_FORBIDDEN, content={"detail": "You are banned"})
+# @app.middleware("http")
+# async def black_list(request: Request, call_next: Callable):
+#     client_ip = ip_address(request.client.host)
+#     # if client_ip in banned_ips:
+#     #     return JSONResponse(status_code=status.HTTP_403_FORBIDDEN, content={"detail": "You are banned"})
 
-    for banned_ip in banned_ips:
-        if client_ip in banned_ip:
-            # у лекції зазначаться, що <middleware> не вміє повертати json, тож потрiбно це робити за неї
-            # raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="You are banned") -> "Internal Server Error"
-            return JSONResponse(status_code=status.HTTP_403_FORBIDDEN, content={"detail": "You are banned"})
+#     for banned_ip in banned_ips:
+#         if client_ip in banned_ip:
+#             # у лекції зазначаться, що <middleware> не вміє повертати json, тож потрiбно це робити за неї
+#             # raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="You are banned") -> "Internal Server Error"
+#             return JSONResponse(status_code=status.HTTP_403_FORBIDDEN, content={"detail": "You are banned"})
         
-    response = await call_next(request)
-    return response
+#     response = await call_next(request)
+#     return response
 
 
 

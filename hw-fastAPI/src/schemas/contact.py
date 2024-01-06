@@ -12,7 +12,8 @@ class ContactSchema(BaseModel):
     last_name: str = Field(min_length=3, max_length=32)
     email: EmailStr = Field(min_length=8, max_length=64)
     phone_number: str = Field(max_length=24)
-    birth_date: str = Field(max_length=10)
+    # birth_date: str = Field(min_length=10, max_length=10)
+    birth_date: date
     crm_status: Literal['operational', 'analitic', 'corporative'] = 'operational'
     # При створеннi контакту можна не передавати <user>, тому що по маршруту router.post("/", ...) -> [create_contact()]
     # може прийти тiльки аутентифiкований користувач з токеном, тож по токену можна дiстати його <email> та <roles>.
@@ -23,18 +24,19 @@ class ContactSchema(BaseModel):
             raise ValueError('Phone number must contain only digits.')
         return phone
  
-    @validator('birth_date')
-    def validate_birth_date(cls, birth_date):
-        if len(str(birth_date)) != 10:
-            raise ValueError('Birth date must contain exactly 10 characters.')
-        
-        if not re.match(r'\d{4}\.\d{2}\.\d{2}|\d{2}\.\d{2}\.\d{4}', birth_date):
-            raise ValueError("Incorrect date format, Birth date should be in format [YYYY.MM.DD] or [DD.MM.YYYY].")
-
-        if re.match(r'\d{4}\.\d{2}\.\d{2}', birth_date):
-            return datetime.strptime(birth_date, '%Y.%m.%d').date()
-        else:
-            return datetime.strptime(birth_date, '%d.%m.%Y').date()
+    # @validator('birth_date')
+    # def validate_birth_date(cls, birth_date):
+    #     if len(str(birth_date)) != 10:
+    #         raise ValueError('Birth date must contain exactly 10 characters.')
+    #     if re.match(r'\d{4}\.\d{2}\.\d{2}', str(birth_date)):
+    #         birth_date = datetime.strptime(str(birth_date), '%Y.%m.%d').date()
+    #     elif re.match(r'\d{2}\.\d{2}\.\d{4}', str(birth_date)):
+    #         birth_date = datetime.strptime(str(birth_date), '%d.%m.%Y').date()
+    #     else:
+    #         raise ValueError("Incorrect date format, Birth date should be in format [YYYY.MM.DD] or [DD.MM.YYYY].")
+    #     if birth_date > date.today():
+    #         raise ValueError('Birth date must be in the past.')
+    #     return birth_date
 
 
 class ContactUpdateSchema(ContactSchema):
@@ -54,7 +56,7 @@ class ContactResponseSchema(BaseModel):
     created_at: datetime | None
     updated_at: datetime | None
     # можна реалiзувати JOIN за класом [UserResponseSchema] з user.py
-    user: UserResponseSchema | None
+    # user: UserResponseSchema | None
 
     # class Config:
     #     from_orm = True
